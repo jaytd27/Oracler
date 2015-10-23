@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Oracler</title>
+  <meta name="description" content="Description of your site goes here">
+  <meta name="keywords" content="keyword1, keyword2, keyword3">
+  <link href="css/style.css" rel="stylesheet" type="text/css">
+  <script src="leap.js"></script>
+<script>
+// Store frame for motion functions
+var previousFrame = null;
+var paused = false;
+var pauseOnGesture = false;
+var swipe=1;
+var circle = 0;
+var tap = 0;
+var attempt=0;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+Leap.loop(controllerOptions, function(frame) {
+  if (paused) {
+    return; // Skip this update
+  }
+
+  // Display Frame object data
+  //var frameOutput = document.getElementById("frameData");
+
+  var frameString = "Frame ID: " + frame.id  + "<br />"
+                  + "Timestamp: " + frame.timestamp + " &micro;s<br />"
+                  + "Hands: " + frame.hands.length + "<br />"
+                  + "Fingers: " + frame.fingers.length + "<br />"
+                  + "Tools: " + frame.tools.length + "<br />"
+                  + "Gestures: " + frame.gestures.length + "<br />";
+
+  // Frame motion factors
+  if (previousFrame && previousFrame.valid) {
+    var translation = frame.translation(previousFrame);
+    frameString += "Translation: " + vectorToString(translation) + " mm <br />";
+
+    var rotationAxis = frame.rotationAxis(previousFrame);
+    var rotationAngle = frame.rotationAngle(previousFrame);
+    frameString += "Rotation axis: " + vectorToString(rotationAxis, 2) + "<br />";
+    frameString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
+
+    var scaleFactor = frame.scaleFactor(previousFrame);
+    frameString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
+  }
+  //frameOutput.innerHTML = "<div style='width:300px; float:left; padding:5px'>" + frameString + "</div>";
+
+  // Display Hand object data
+  //var handOutput = document.getElementById("handData");
+  var handString = "";
+  if (frame.hands.length > 0) {
+    for (var i = 0; i < frame.hands.length; i++) {
+      var hand = frame.hands[i];
+
+      handString += "<div style='width:300px; float:left; padding:5px'>";
+      handString += "Hand ID: " + hand.id + "<br />";
+      handString += "Type: " + hand.type + " hand" + "<br />";
+      handString += "Direction: " + vectorToString(hand.direction, 2) + "<br />";
+      handString += "Palm position: " + vectorToString(hand.palmPosition) + " mm<br />";
+      handString += "Grab strength: " + hand.grabStrength + "<br />";
+      handString += "Pinch strength: " + hand.pinchStrength + "<br />";
+      handString += "Confidence: " + hand.confidence + "<br />";
+
+      // Hand motion factors
+      if (previousFrame && previousFrame.valid) {
+        var translation = hand.translation(previousFrame);
+        handString += "Translation: " + vectorToString(translation) + " mm<br />";
+
+        var rotationAxis = hand.rotationAxis(previousFrame, 2);
+        var rotationAngle = hand.rotationAngle(previousFrame);
+        handString += "Rotation axis: " + vectorToString(rotationAxis) + "<br />";
+        handString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
+
+        var scaleFactor = hand.scaleFactor(previousFrame);
+        handString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
+      }
+
+      // IDs of pointables (fingers and tools) associated with this hand
+      if (hand.pointables.length > 0) {
+        var fingerIds = [];
+        var toolIds = [];
+        for (var j = 0; j < hand.pointables.length; j++) {
+          var pointable = hand.pointables[j];
+          if (pointable.tool) {
+            toolIds.push(pointable.id);
+          }
+          else {
+            fingerIds.push(pointable.id);
+          }
+        }
+        if (fingerIds.length > 0) {
+          handString += "Fingers IDs: " + fingerIds.join(", ") + "<br />";
+        }
+        if (toolIds.length > 0) {
+          handString += "Tools IDs: " + toolIds.join(", ") + "<br />";
+        }
+      }
+
+      handString += "</div>";
+    }
+  }
+  else {
+    handString += "No hands";
+  }
+  //handOutput.innerHTML = handString;
+
+  // Display Pointable (finger and tool) object data
+  //var pointableOutput = document.getElementById("pointableData");
+  var pointableString = "";
+  if (frame.pointables.length > 0) {
+    var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+    var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+    for (var i = 0; i < frame.pointables.length; i++) {
+      var pointable = frame.pointables[i];
+
+      pointableString += "<div style='width:250px; float:left; padding:5px'>";
+
+      if (pointable.tool) {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Classified as a tool <br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+        pointableString += "</div>";
+      }
+      else {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+        pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+        pointableString += "Classified as a finger<br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Extended?: "  + pointable.extended + "<br />";
+        pointable.bones.forEach( function(bone){
+          pointableString += boneTypeMap[bone.type] + " bone <br />";
+          pointableString += "Center: " + vectorToString(bone.center()) + "<br />";
+          pointableString += "Direction: " + vectorToString(bone.direction()) + "<br />";
+          pointableString += "Up vector: " + vectorToString(bone.basis[1]) + "<br />";
+        });
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+        pointableString += "</div>";
+      }
+    }
+  }
+  else {
+    pointableString += "<div>No pointables</div>";
+  }
+  //pointableOutput.innerHTML = pointableString;
+
+  // Display Gesture object data
+  //var gestureOutput = document.getElementById("gestureData");
+  var gestureString = "";
+  if (frame.gestures.length > 0) {
+    if (pauseOnGesture) {
+      togglePause();
+    }
+    for (var i = 0; i < frame.gestures.length; i++) {
+      var gesture = frame.gestures[i];
+      gestureString += "Gesture ID: " + gesture.id + ", "
+                    + "type: " + gesture.type + ", "
+                    + "state: " + gesture.state + ", "
+                    + "hand IDs: " + gesture.handIds.join(", ") + ", "
+                    + "pointable IDs: " + gesture.pointableIds.join(", ") + ", "
+                    + "duration: " + gesture.duration + " &micro;s, ";
+
+      switch (gesture.type) {
+        case "circle":
+			togglePause();	
+			setTimeout('togglePause();', 1000);	
+			PlaySound("click.mp3");
+			circle++;								
+			
+			if(circle==3)
+			{
+				PlaySound("next.mp3");
+				setTimeout('document.getElementById("next1").click();', 1000);
+				circle=0;
+			}
+          	break;
+        case "swipe":
+			togglePause();	
+			setTimeout('togglePause();', 1000);	
+			swipe++;
+			tap=0;
+			circle=0;
+				
+			if(swipe == 4)
+				swipe = 1;
+			if(swipe == 1)
+			{
+				document.getElementById("answerb1").click();	
+			}
+			else if(swipe == 2)
+			{
+				document.getElementById("answerb2").click();	
+			}
+			else if(swipe == 3)
+			{
+				document.getElementById("answerb3").click();			
+			}
+			break;
+        case "screenTap":
+			setTimeout('document.getElementById("exit1").click();', 1000);	
+			togglePause();	
+			setTimeout('togglePause();', 1500);		
+			break;
+        case "keyTap":
+			togglePause();	
+			setTimeout('togglePause();', 1000);	
+			PlaySound("click.mp3");
+			tap++;											
+			if(tap==5)
+			{
+				PlaySound("exit.mp3");
+				setTimeout('document.getElementById("exit1").click();', 1000);
+				tap=0;
+			}
+          	break;
+			
+        default:
+          gestureString += "unkown gesture type";
+      }
+      gestureString += "<br />";
+    }
+  }
+  else {
+    gestureString += "No gestures";
+  }
+  //gestureOutput.innerHTML = gestureString;
+
+  // Store frame for motion functions
+  previousFrame = frame;
+})
+
+function vectorToString(vector, digits) {
+  if (typeof digits === "undefined") {
+    digits = 1;
+  }
+  return "(" + vector[0].toFixed(digits) + ", "
+             + vector[1].toFixed(digits) + ", "
+             + vector[2].toFixed(digits) + ")";
+}
+
+function togglePause() {
+  paused = !paused;
+}
+</script>
+  
+  <style type="text/css">
+.button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #c1ed9c;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #c1ed9c;
+	box-shadow:inset 0px 1px 0px 0px #c1ed9c;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #9dce2c), color-stop(1, #8cb82b) );
+	background:-moz-linear-gradient( center top, #9dce2c 5%, #8cb82b 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#9dce2c', endColorstr='#8cb82b');
+	background-color:#9dce2c;
+	-webkit-border-top-left-radius:20px;
+	-moz-border-radius-topleft:20px;
+	border-top-left-radius:20px;
+	-webkit-border-top-right-radius:20px;
+	-moz-border-radius-topright:20px;
+	border-top-right-radius:20px;
+	-webkit-border-bottom-right-radius:20px;
+	-moz-border-radius-bottomright:20px;
+	border-bottom-right-radius:20px;
+	-webkit-border-bottom-left-radius:20px;
+	-moz-border-radius-bottomleft:20px;
+	border-bottom-left-radius:20px;
+	text-indent:0;
+	border:1px solid #83c41a;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	font-style:normal;
+	height:60px;
+	line-height:65px;
+	width:150px;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #689324;
+}
+.button:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #8cb82b), color-stop(1, #9dce2c) );
+	background:-moz-linear-gradient( center top, #8cb82b 5%, #9dce2c 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#8cb82b', endColorstr='#9dce2c');
+	background-color:#8cb82b;
+}.button:active {
+	position:relative;
+	top:1px;
+}</style>
+
+<style type="text/css">
+.button2 {
+	-moz-box-shadow:inset 0px 1px 0px 0px #f29c93;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #f29c93;
+	box-shadow:inset 0px 1px 0px 0px #f29c93;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fe1a00), color-stop(1, #ce0100) );
+	background:-moz-linear-gradient( center top, #fe1a00 5%, #ce0100 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#fe1a00', endColorstr='#ce0100');
+	background-color:#fe1a00;
+	-webkit-border-top-left-radius:20px;
+	-moz-border-radius-topleft:20px;
+	border-top-left-radius:20px;
+	-webkit-border-top-right-radius:20px;
+	-moz-border-radius-topright:20px;
+	border-top-right-radius:20px;
+	-webkit-border-bottom-right-radius:20px;
+	-moz-border-radius-bottomright:20px;
+	border-bottom-right-radius:20px;
+	-webkit-border-bottom-left-radius:20px;
+	-moz-border-radius-bottomleft:20px;
+	border-bottom-left-radius:20px;
+	text-indent:0;
+	border:1px solid #d83526;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	font-style:normal;
+	height:60px;
+	line-height:65px;
+	width:150px;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #b23e35;
+}
+.button2:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ce0100), color-stop(1, #fe1a00) );
+	background:-moz-linear-gradient( center top, #ce0100 5%, #fe1a00 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ce0100', endColorstr='#fe1a00');
+	background-color:#ce0100;
+}.button2:active {
+	position:relative;
+	top:1px;
+}
+
+
+.button3 {
+	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #79bbff), color-stop(1, #378de5) );
+	background:-moz-linear-gradient( center top, #79bbff 5%, #378de5 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#79bbff', endColorstr='#378de5');
+	background-color:#79bbff;
+	-webkit-border-top-left-radius:20px;
+	-moz-border-radius-topleft:20px;
+	border-top-left-radius:20px;
+	-webkit-border-top-right-radius:20px;
+	-moz-border-radius-topright:20px;
+	border-top-right-radius:20px;
+	-webkit-border-bottom-right-radius:20px;
+	-moz-border-radius-bottomright:20px;
+	border-bottom-right-radius:20px;
+	-webkit-border-bottom-left-radius:20px;
+	-moz-border-radius-bottomleft:20px;
+	border-bottom-left-radius:20px;
+	text-indent:0;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	font-style:normal;
+	height:60px;
+	line-height:65px;
+	width:150px;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #528ecc;
+}
+.button3:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #378de5), color-stop(1, #79bbff) );
+	background:-moz-linear-gradient( center top, #378de5 5%, #79bbff 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#378de5', endColorstr='#79bbff');
+	background-color:#378de5;
+}.button3:active {
+	position:relative;
+	top:1px;
+}
+
+</style>
+  
+</head>
+<body onload="myFunction()">
+<!-- <script src="jquery.js"></script> -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script>
+function getAnswer(a_type,a_number) {
+	var data_from_ajax;
+	//var a_type,a_number;
+	sessionStorage.setItem("q_type", a_type);
+	sessionStorage.setItem("q_number", a_number);
+	var path = 'getanswer.php?type='+a_type+'&number='+a_number;
+	//window.alert(path);
+	$.get(path, function(data) {
+			data_from_ajax = data;
+				//window.alert("inside");
+				var split = data.split(',');
+				var ans1 = split[0];
+				var ans2 = split[1];
+				var ans3 = split[2];
+				var letter1 = ans1.charAt(0);
+				var letter2 = ans2.charAt(0);
+				var letter3 = ans3.charAt(0);
+				var order = Math.floor((Math.random() * 3) + 1);
+				if(order==1)
+				{
+					document.getElementById("answerb1").value = letter1;
+					document.getElementById("answerb2").value = letter2;
+					document.getElementById("answerb3").value = letter3;
+					document.getElementById("answer").innerHTML = 3;
+				}
+				else if(order==2)
+				{
+					document.getElementById("answerb1").value = letter2;
+					document.getElementById("answerb2").value = letter1;
+					document.getElementById("answerb3").value = letter3;
+					document.getElementById("answer").innerHTML = 7;
+				}
+				else if(order==3)
+				{
+					document.getElementById("answerb1").value = letter3;
+					document.getElementById("answerb2").value = letter2;
+					document.getElementById("answerb3").value = letter1;
+					document.getElementById("answer").innerHTML = 5;
+				}
+
+	});
+}
+
+function getAnswer2(a_type,a_number) {
+	var data_from_ajax;
+	//var a_type,a_number;
+	var path = 'getanswer.php?type='+a_type+'&number='+a_number;
+	//window.alert(path);
+	$.get(path, function(data) {
+			data_from_ajax = data;
+				//window.alert("inside");
+				var split = data.split(',');
+				var ans1 = split[0];
+				var ans2 = split[1];
+				var ans3 = split[2];
+				var order = Math.floor((Math.random() * 3) + 1);
+				if(order==1)
+				{
+					document.getElementById("answerb1").value = ans1;
+					document.getElementById("answerb2").value = ans2;
+					document.getElementById("answerb3").value = ans3;
+					document.getElementById("answer").innerHTML = 3;
+				}
+				else if(order==2)
+				{
+					document.getElementById("answerb1").value = ans2;
+					document.getElementById("answerb2").value = ans1;
+					document.getElementById("answerb3").value = ans3;
+					document.getElementById("answer").innerHTML = 7;
+				}
+				else if(order==3)
+				{
+					document.getElementById("answerb1").value = ans3;
+					document.getElementById("answerb2").value = ans2;
+					document.getElementById("answerb3").value = ans1;
+					document.getElementById("answer").innerHTML = 5;
+				}
+
+	});
+}
+</script>
+<script type="text/javascript">
+
+function PlaySound(soundfile) {
+  document.getElementById("dummy").innerHTML= "<embed src=\""+soundfile+"\" hidden=\"true\" autostart=\"true\" loop=\"false\" />";
+}
+
+function myFunction() {
+    var type = 1;
+	var q=".png";
+	var number = Math.floor((Math.random() * 15) + 1);
+	number=number+15;	
+	var a1,a2,a3;
+				
+	document.getElementById("question").src="images/"+type+"/"+number+q;
+	document.getElementById("question-a").src="images/hintkey.png";
+	setTimeout('document.getElementById("question-a").src="images/blank-a.png";', 5000);
+	
+
+	//document.getElementById("answer2").innerHTML = type+"/"+number;
+	
+	var data_from_ajax;
+	var a_type,a_number;
+	a_type=type;
+	a_number=number;
+	getAnswer(a_type,a_number);
+	//window.alert(data_from_ajax);
+	
+}
+
+function a1() {
+	PlaySound("click.mp3");
+	document.getElementById("a1").checked="checked";
+}
+
+function a2() {
+	PlaySound("click.mp3");
+	document.getElementById("a2").checked="checked";
+}
+
+function a3() {
+	PlaySound("click.mp3");
+	document.getElementById("a3").checked="checked";
+}
+
+
+
+function next() {
+	var ans = document.getElementById("answer").innerHTML;
+	var a_count = parseInt(sessionStorage.getItem("ans_count"));
+	//window.alert(ans);
+	if ((ans==3 && document.getElementById("a1").checked) || (ans==7 && document.getElementById("a2").checked) || (ans==5 && document.getElementById("a3").checked)) {
+		PlaySound("bell.mp3");
+    	document.getElementById("question-a").src="images/correct-a.png";
+		setTimeout(function(){var ww = window.open(window.location, '_self'); window.location.href='challenge3.html'; }, 2000);
+		a_count = a_count + 1;
+	}
+	else
+	{
+		if(attempt==0)
+		{
+			circle=0;
+			togglePause();	
+			setTimeout('togglePause();', 1000);	
+			PlaySound("buzz.mp3");
+			document.getElementById("question-a").src="images/wrong-a1.png";
+			setTimeout('document.getElementById("question-a").src="images/blank-a.png";', 2000);
+			var a_type = parseInt(sessionStorage.getItem("q_type"));
+			var a_number = parseInt(sessionStorage.getItem("q_number"));
+			getAnswer2(a_type,a_number);
+			attempt++;
+		}
+		else
+		{
+			PlaySound("buzz.mp3");
+			document.getElementById("question-a").src="images/wrong-a.png";
+			setTimeout(function(){var ww = window.open(window.location, '_self'); window.location.href='challenge3.html'; }, 1000);
+		}
+	}
+	sessionStorage.setItem("ans_count",a_count);
+	
+}
+
+</script>
+
+<div class="main-out">
+	<div class="main">
+		<div class="page">
+		  <div class="top">
+			  <div class="header">
+              	<img src="images/header-top.jpg" alt="" width="980" height="150">
+              </div>              
+			  <div class="content">
+				  <iframe src="images/blank.png" height="400" width="980" frameBorder="0" scrolling="no" id="question"></iframe>
+              </div>      
+              <div class="content-m">
+				  <table width="980" height="80" scrolling="no" align="center">
+                  <tr width="980" height="80">
+                    <div align="left"><th width="40"><font color="white"><label id="answer"></label></font></th></div>
+                    <div align="left"><th width="900"><iframe src="images/blank.png" height="80" width="900" frameBorder="0" scrolling="no" id="question-a"></iframe>    
+                    <div align="left"><th width="40"><iframe src="images/c2.png" height="80" width="40" frameBorder="0" scrolling="no"></iframe></th></div>
+                  </tr>
+                  </table>
+              </div>            
+			  <div class="content2">
+              	<table width="980" height="200" scrolling="no" align="center">
+                  <tr width="980" height="125">
+                    <div align="center"><th width="245"><input type="radio" name="radiog_lite" id="a1" class="css-checkbox" checked="checked" disabled="true"/><label for="a1" class="css-label"></label></th></div>
+                    <div align="center"><th width="245"><input type="radio" name="radiog_lite" id="a2" class="css-checkbox"  disabled="true"/><label for="a2" class="css-label"></label></th></div>    
+                    <div align="center"><th width="245"><input type="radio" name="radiog_lite" id="a3" class="css-checkbox"  disabled="true"/><label for="a3" class="css-label"></label></th></div>
+                    <div align="center"><th width="245"><input type="button" id="next1" value="Next" class="button" onClick="next()"></th></div>
+                  </tr>
+                  <tr width="980" height="100">
+                    <div align="center"><th><input type="button" id="answerb1" value="Answer 1" class="button3" onClick="a1()"></th></div>
+                    <div align="center"><th><input type="button" id="answerb2" value="Answer 2" class="button3" onClick="a2()"></th></div>
+                    <div align="center"><th><input type="button" id="answerb3" value="Answer 3" class="button3" onClick="a3()"></th></div>
+                    <div align="center"><th><input type="button" id="exit1" value="Exit" class="button2" onClick="javascript:window.location.href='index.html';"></th></div>
+                  </tr>
+                </table>          
+              </div>
+		  </div>
+		</div>
+    <div class="bottom">
+<p>&copy; Copyright 2014. Oracler. TemplateDesigned by <a target="_blank"
+ href="http://www.htmltemplates.net">HtmlTemplates</a></p>
+<!--Designed by--><a href="http://www.htmltemplates.net">
+<img src="images/footnote.gif" class="copyright" alt="http://www.htmltemplates.net"></a></div>
+</div>
+<span id="dummy"></span>
+</body>
+</html>

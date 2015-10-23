@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Oracler</title>
+  <meta name="description" content="Description of your site goes here">
+  <meta name="keywords" content="keyword1, keyword2, keyword3">
+  <link href="css/style.css" rel="stylesheet" type="text/css">
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script src="leap.js"></script>
+<script>
+// Store frame for motion functions
+var previousFrame = null;
+var paused = false;
+var pauseOnGesture = false;
+var circle=0;
+var swipe=0;
+var tap=0;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+Leap.loop(controllerOptions, function(frame) {
+  if (paused) {
+    return; // Skip this update
+  }
+
+  // Display Frame object data
+  //var frameOutput = document.getElementById("frameData");
+
+  var frameString = "Frame ID: " + frame.id  + "<br />"
+                  + "Timestamp: " + frame.timestamp + " &micro;s<br />"
+                  + "Hands: " + frame.hands.length + "<br />"
+                  + "Fingers: " + frame.fingers.length + "<br />"
+                  + "Tools: " + frame.tools.length + "<br />"
+                  + "Gestures: " + frame.gestures.length + "<br />";
+
+  // Frame motion factors
+  if (previousFrame && previousFrame.valid) {
+    var translation = frame.translation(previousFrame);
+    frameString += "Translation: " + vectorToString(translation) + " mm <br />";
+
+    var rotationAxis = frame.rotationAxis(previousFrame);
+    var rotationAngle = frame.rotationAngle(previousFrame);
+    frameString += "Rotation axis: " + vectorToString(rotationAxis, 2) + "<br />";
+    frameString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
+
+    var scaleFactor = frame.scaleFactor(previousFrame);
+    frameString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
+  }
+  //frameOutput.innerHTML = "<div style='width:300px; float:left; padding:5px'>" + frameString + "</div>";
+
+  // Display Hand object data
+  //var handOutput = document.getElementById("handData");
+  var handString = "";
+  if (frame.hands.length > 0) {
+    for (var i = 0; i < frame.hands.length; i++) {
+      var hand = frame.hands[i];
+
+      handString += "<div style='width:300px; float:left; padding:5px'>";
+      handString += "Hand ID: " + hand.id + "<br />";
+      handString += "Type: " + hand.type + " hand" + "<br />";
+      handString += "Direction: " + vectorToString(hand.direction, 2) + "<br />";
+      handString += "Palm position: " + vectorToString(hand.palmPosition) + " mm<br />";
+      handString += "Grab strength: " + hand.grabStrength + "<br />";
+      handString += "Pinch strength: " + hand.pinchStrength + "<br />";
+      handString += "Confidence: " + hand.confidence + "<br />";
+
+      // Hand motion factors
+      if (previousFrame && previousFrame.valid) {
+        var translation = hand.translation(previousFrame);
+        handString += "Translation: " + vectorToString(translation) + " mm<br />";
+
+        var rotationAxis = hand.rotationAxis(previousFrame, 2);
+        var rotationAngle = hand.rotationAngle(previousFrame);
+        handString += "Rotation axis: " + vectorToString(rotationAxis) + "<br />";
+        handString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
+
+        var scaleFactor = hand.scaleFactor(previousFrame);
+        handString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
+      }
+
+      // IDs of pointables (fingers and tools) associated with this hand
+      if (hand.pointables.length > 0) {
+        var fingerIds = [];
+        var toolIds = [];
+        for (var j = 0; j < hand.pointables.length; j++) {
+          var pointable = hand.pointables[j];
+          if (pointable.tool) {
+            toolIds.push(pointable.id);
+          }
+          else {
+            fingerIds.push(pointable.id);
+          }
+        }
+        if (fingerIds.length > 0) {
+          handString += "Fingers IDs: " + fingerIds.join(", ") + "<br />";
+        }
+        if (toolIds.length > 0) {
+          handString += "Tools IDs: " + toolIds.join(", ") + "<br />";
+        }
+      }
+
+      handString += "</div>";
+    }
+  }
+  else {
+    handString += "No hands";
+  }
+  //handOutput.innerHTML = handString;
+
+  // Display Pointable (finger and tool) object data
+  //var pointableOutput = document.getElementById("pointableData");
+  var pointableString = "";
+  if (frame.pointables.length > 0) {
+    var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+    var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+    for (var i = 0; i < frame.pointables.length; i++) {
+      var pointable = frame.pointables[i];
+
+      pointableString += "<div style='width:250px; float:left; padding:5px'>";
+
+      if (pointable.tool) {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Classified as a tool <br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+        pointableString += "</div>";
+      }
+      else {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+        pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+        pointableString += "Classified as a finger<br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Extended?: "  + pointable.extended + "<br />";
+        pointable.bones.forEach( function(bone){
+          pointableString += boneTypeMap[bone.type] + " bone <br />";
+          pointableString += "Center: " + vectorToString(bone.center()) + "<br />";
+          pointableString += "Direction: " + vectorToString(bone.direction()) + "<br />";
+          pointableString += "Up vector: " + vectorToString(bone.basis[1]) + "<br />";
+        });
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+        pointableString += "</div>";
+      }
+    }
+  }
+  else {
+    pointableString += "<div>No pointables</div>";
+  }
+  //pointableOutput.innerHTML = pointableString;
+
+  // Display Gesture object data
+  //var gestureOutput = document.getElementById("gestureData");
+  var gestureString = "";
+  if (frame.gestures.length > 0) {
+    if (pauseOnGesture) {
+      togglePause();
+    }
+    for (var i = 0; i < frame.gestures.length; i++) {
+      var gesture = frame.gestures[i];
+      gestureString += "Gesture ID: " + gesture.id + ", "
+                    + "type: " + gesture.type + ", "
+                    + "state: " + gesture.state + ", "
+                    + "hand IDs: " + gesture.handIds.join(", ") + ", "
+                    + "pointable IDs: " + gesture.pointableIds.join(", ") + ", "
+                    + "duration: " + gesture.duration + " &micro;s, ";
+
+      switch (gesture.type) {
+        case "circle":
+			togglePause();
+			setTimeout('togglePause();', 1000);	
+			PlaySound("click.mp3");	
+			
+			circle++;	
+			
+						
+			document.getElementById("gesture").innerHTML = "Circle: (" + circle + ")";
+			if(circle==3)
+			{
+				PlaySound("next.mp3");	
+				setTimeout('document.getElementById("challenge").click();', 1000);		
+				circle=0;
+			}
+          	break;
+        case "swipe":
+			togglePause();
+			setTimeout('togglePause();', 1000);		
+			PlaySound("click.mp3");
+			
+			swipe++;	
+			
+			document.getElementById("gesture").innerHTML = "Swipe: (" + swipe + ")";
+			if(swipe==3)
+			{
+				PlaySound("next.mp3");	
+				setTimeout('document.getElementById("practice").click();', 1000);		
+				swipe=0;
+			}
+			
+			break;
+        case "screenTap":
+			togglePause();
+			setTimeout('togglePause();', 1000);	
+			PlaySound("click.mp3");	
+			
+			tap++;	
+						
+			
+			document.getElementById("gesture").innerHTML = "Screen Tap: (" + tap + ")" ;
+			if(tap==3)
+			{
+				PlaySound("next.mp3");	
+				setTimeout('document.getElementById("tourt").click();', 1000);		
+				tap=0;
+			}
+			
+			break;
+        case "keyTap":
+			togglePause();
+			setTimeout('togglePause();', 1000);	
+			PlaySound("click.mp3");
+
+			tap++;	
+							
+			
+			document.getElementById("gesture").innerHTML = "Key Tap: (" + tap + ")";
+			if(tap==3)
+			{
+				PlaySound("next.mp3");	
+				setTimeout('document.getElementById("tour").click();', 1000);		
+				tap=0;
+			}
+         	
+          	break;
+			
+        default:
+          gestureString += "unkown gesture type";
+		  document.getElementById("gesture").innerHTML = "Unknown";
+      }
+      gestureString += "<br />";
+    }
+  }
+  else {
+    gestureString += "No gestures";
+  }
+  //gestureOutput.innerHTML = gestureString;
+
+  // Store frame for motion functions
+  previousFrame = frame;
+})
+
+function vectorToString(vector, digits) {
+  if (typeof digits === "undefined") {
+    digits = 1;
+  }
+  return "(" + vector[0].toFixed(digits) + ", "
+             + vector[1].toFixed(digits) + ", "
+             + vector[2].toFixed(digits) + ")";
+}
+
+function togglePause() {
+  paused = !paused;
+}
+
+
+function PlaySound(soundfile) {
+  document.getElementById("dummy").innerHTML= "<embed src=\""+soundfile+"\" hidden=\"true\" autostart=\"true\" loop=\"false\" />";
+}
+
+</script>
+  
+</head>
+<body>
+<div class="main-out">
+<div class="main">
+<div class="page">
+  <div class="top">
+  <div class="header"><img src="images/header-top.jpg" alt="" width="980" height="150"></div>
+<div class="content0">
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p><center>
+  <p>
+    <input type="button" value="Challenge" class="button" onClick="javascript:window.location.href='challenge.html';" id="challenge" >
+  </p>
+  <p><strong>Perform Circle Action to select Challenge</strong></p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>
+    <input type="button" value="Practice" class="button" onClick="javascript:window.location.href='practice.html';" id="practice">
+  </p>
+  <p><strong>Perform Swipe Action to select Practice</strong></p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>
+    <input type="button" value="Take A Tour" class="button" onClick="javascript:window.location.href='guide.html';" id="tour">
+  </p>
+  <p><strong>Perform Tap Action  to select Tour</strong></p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>
+    <input type="button" value="Exit" class="button2" onclick="setTimeout(function(){var ww = window.open(window.location, '_self'); ww.close(); }, 1000);" id="exit">
+  </p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p><strong>Gesture: <label id="gesture"></label></strong>&nbsp; </p>
+  </center></p>
+
+</div>
+</div>
+<!--DO NOT Remove The Footer Links-->
+</div><div class="bottom"> <!--DO NOT Remove The Footer Links-->
+<p>&copy; Copyright 2014. Oracler. TemplateDesigned by <a target="_blank"
+ href="http://www.htmltemplates.net">HtmlTemplates</a></p>
+<!--Designed by--><a href="http://www.htmltemplates.net">
+<img src="images/footnote.gif" class="copyright" alt="http://www.htmltemplates.net"></a></div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+<span id="dummy"></span>
+</body>
+</html>

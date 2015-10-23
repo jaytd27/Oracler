@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<questions>
+ <text>
+   <id type="1">
+     <question>When is the UnitedStates independence day?</question>
+     <answer>4th July</answer>
+     <choices>4th July, 5th July, 6tj July</choices>
+     <help>even number</help>
+    </id>
+     <id type="2">
+     <question>In which year did US get independence?</question>
+     <answer>1776</answer>
+     <choices>1776,1476,1576</choices>
+     <help>biggest number</help>
+    </id>
+     <id type="3">
+     <question>How many president died on US Independence day?</question>
+     <answer>3</answer>
+     <choices>3,,4 ,8</choices>
+     <help>odd number</help>
+    </id>
+     <id type="4">
+     <question>Who is the first president of US?</question>
+     <answer>George Washington</answer>
+     <choices>	George Washington, Thomas Jefferson, John Adams</choices>
+     <help>G, T, J</help>
+    </id>
+    <id type="5">
+     <question>What is the capital of United States??</question>
+     <answer>Washington</answer>
+     <choices>Washington DC, New Jersey, New York</choices>
+     <help>W,N,J</help>
+    </id>
+     <id type="6">
+     <question>Which state of USA was once part of Mexico??</question>
+     <answer>Texas</answer>
+     <choices>	Texas, Alaska, New Mexico</choices>
+     <help>T,A,Nr</help>
+    </id>
+     <id type="7">
+     <question>Who had the longest tenure as president of USA?</question>
+     <answer>Franklin D. Rossevelt</answer>
+     <choices>Franklin D. Rossevelt, John F Kennedy, James Karte</choices>
+     <help>even number</help>
+    </id>
+     <id type="9">
+     <question>How many stars are in the flag of USA??</question>
+     <answer>20</answer>
+     <choices>40,50,60</choices>
+     <help>Multiples of 20</help>
+    </id>
+     <id type="10">
+     <question>Albany is the capital of which State?</question>
+     <answer>New York</answer>
+     <choices>New York,Maryland,Texas</choices>
+     <help>statue of liberty</help>
+    </id>
+     <id type="11">
+     <question>If its 6 am in NY, whats tme in LA?</question>
+     <answer>3</answer>
+     <choices>3:00 am,3:00 pm,6:00 pm	</choices>
+     <help>Morning timeer</help>
+    </id>
+     <id type="12">
+     <question>Abrahim Lincoln was shot on 18 April 1865. It was?</question>
+     <answer>Good Friday</answer>
+     <choices>Good Friday,Palm Sunday,Easter</choices>
+     <help>Jesus Christ</help>
+    </id>
+     <id type="13">
+     <question>Which is the first 24 hrs news channel??</question>
+     <answer>CNN</answer>
+     <choices>CNN,Disney,NBC</choices>
+     <help>C character</help>
+    </id>
+     <id type="14">
+     <question>How many stripes are in the flag of USA??</question>
+     <answer>13</answer>
+     <choices>	13,12,15</choices>
+     <help>prime number</help>
+    </id>
+     <id type="15">
+     <question>Waht is the flag of USA called??</question>
+     <answer>Stars and Stripes</answer>
+     <choices>	Stars and Stripes,Maple Leaf,Union Jack</choices>
+     <help>Satellite</help>
+    </id>
+     <id type="16">
+     <question>What is the capital of California?</question>
+     <answer>Sacramento</answer>
+     <choices>Sacramento,Los Angeles,San Francisco</choices>
+     <help>starts with S</help>
+    </id>
+    <id type="17">
+     <question>Which state of USA called sunshine state??</question>
+     <answer>Folorida</answer>
+     <choices>Floria,California,Arizona	</choices>
+     <help>Miami</help>
+    </id>
+    <id type="18">
+     <question>Who was the first person to walk on moon??</question>
+     <answer>Neil Armstrong</answer>
+     <choices>Neil Armstrong,John Glenn,Jim Lowell</choices>
+     <help>powerful</help>
+    </id>
+    <id type="19">
+     <question>Which president freed the slaves?</question>
+     <answer>Abraham Lincoln/answer>
+     <choices>Abraham Lincoln,George Bush,John Adams</choices>
+     <help>most popular president</help>
+    </id>
+    <id type="21">
+     <question>In which month is the new president inaugurate??</question>
+     <answer>January</answer>
+     <choices>January,July,August</choices>
+     <help>first month of the year</help>
+    </id>
+    <id type="22">
+     <question>Which is the fasted animal in the world??</question>
+     <answer>Cheetah</answer>
+     <choices>Cheetah,Tiger,Lion</choices>
+     <help>Hindi meaning</help>
+    </id>
+    <id type="23">
+     <question>What is the capital city of France??</question>
+     <answer>Paris</answer>
+     <choices>Paris,Lyon,Orleans</choices>
+     <help>Eiffel tower</help>
+    </id>
+    <id type="24">
+     <question>What is the capital of California?</question>
+     <answer>Sacramento</answer>
+     <choices>Sacramento,Los Angeles,San Francisco</choices>
+     <help>starts with S</help>
+    </id>
+    <id type="25">
+     <question>Who killed Julius Caesar?</question>
+     <answer>Brutus</answer>
+     <choices>Brutus,Flavius,Antony</choices>
+     <help>somewhat related to brutal</help>
+    </id>
+    <id type="26">
+     <question>Which organ in our body filters blood??</question>
+     <answer>Kidney</answer>
+     <choices>Kidney,Liver,Heart</choices>
+     <help>have kid in it</help>
+    </id>
+    <id type="27">
+     <question>Which state is the biggest in US?</question>
+     <answer>Alaska,</answer>
+     <choices>Alaska,Texas,Canada</choices>
+     <help>starts with first letter</help>
+    </id>
+    <id type="28">
+     <question>Which Apollo Mission landed the first humans on Mo...	</question>
+     <answer>Apollo 11</answer>
+     <choices>Apollo 11,Apollo 12,Apollo 13</choices>
+     <help>smallest prime</help>
+    </id>
+  </text>
+  <image>
+     <id type="1">
+     <question>Identify the object?</question>
+     <answer>Abacus</answer>
+     <choices>Abacus,Calculator,Radio</choices>
+     <help>starts with first letter</help>
+    </id>
+    <id type="2">
+     <question>Identify the object??</question>
+     <answer>Acorn,</answer>
+     <choices>Acorn,Peanut,Wallnut</choices>
+     <help>starts with first letter</help>
+    </id>
+    <id type="3">
+     <question>Identify the object	</question>
+     <answer>>Escalator</answer>
+     <choices>Escalator,Elevator,Stairs</choices>
+     <help>sstarts with E</help>
+    </id>
+    <id type="4">
+     <question>Identify the object?</question>
+     <answer>Igloo</answer>
+     <choices>Igloo,Ice,Eskimo</choices>
+     <help>Place of living</help>
+    </id>
+    <id type="5">
+     <question>Identify the object??</question>
+     <answer>Pyramids</answer>
+     <choices>Pyramids,Sphinx,Amon Ra</choices>
+     <help>Egypt</help>
+    </id>
+    <id type="6">
+     <question>Identify the object	</question>
+     <answer>>Watch</answer>
+     <choices>Watch,Sundial,Wristband</choices>
+     <help>time</help>
+    </id>
+        <id type="7">
+     <question>Identify the object??</question>
+     <answer>Australia</answer>
+     <choices>Australia,New Zealand,United Kingdom</choices>
+     <help>biggest continent</help>
+    </id>
+    <id type="8">
+     <question>Identify the object	</question>
+     <answer>Brazil</answer>
+     <choices>Brazil,Columbia,Nigeria</choices>
+     <help>soccer world cup</help>
+    </id>
+    <id type="9">
+     <question>Identify the object?</question>
+     <answer>Netherland</answer>
+     <choices>Netherland,France,Spain</choices>
+     <help>part of earth</help>
+    </id>
+    <id type="10">
+     <question>Identify the object??</question>
+     <answer>Turkey</answer>
+     <choices>Turkey,Japan,Tunisia</choices>
+     <help>starts with T</help>
+    </id>
+    <id type="12">
+     <question>Identify the object	</question>
+     <answer>>Compass</answer>
+     <choices>Compass,Globe,Watch</choices>
+     <help>tcould be related to ship</help>
+    </id>
+     <id type="13">
+     <question>Identify the object	</question>
+     <answer>Typewritter</answer>
+     <choices>Typewritter,Keyboard,Radio</choices>
+     <help>old printer</help>
+    </id>
+    <id type="14">
+     <question>Identify the object?</question>
+     <answer>Lion</answer>
+     <choices>Lion,Tiger,Panther</choices>
+     <help>king of animals</help>
+    </id>
+    <id type="15">
+     <question>Identify the object??</question>
+     <answer>Kangaroo</answer>
+     <choices>Kangaroo,Giraffe,Bison</choices>
+     <help>Australia</help>
+    </id>
+    <id type="16">
+     <question>Identify the object	</question>
+     <answer>>Morgan Freeman</answer>
+     <choices>Morgan Freeman,Al Pacino,Barack Obama</choices>
+     <help>tloook alike of nelson mandela</help>
+    </id>
+  </image>
+</questions>
